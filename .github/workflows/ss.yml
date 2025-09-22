@@ -1,0 +1,15 @@
+      - name: Take Screenshot and Upload
+        shell: pwsh
+        run: |
+          python -c "
+import pyautogui, requests
+ss = pyautogui.screenshot()
+ss.save('screen.png')
+with open('screen.png', 'rb') as f:
+    res = requests.post(
+        'https://api.gofile.io/uploadFile',
+        files={'file': f}
+    )
+    link = res.json()['data']['downloadPage']
+    print(f'Gofile Link: {link}')
+"
