@@ -1,15 +1,19 @@
-      - name: Take Screenshot and Upload
+      - name: Minimize CMD, Take Screenshot, Upload to GoFile
         shell: pwsh
         run: |
+          # Try to minimize all command windows (best effort, will have no effect in headless CI)
+          Add-Type -AssemblyName System.Windows.Forms
+          [System.Windows.Forms.SendKeys]::SendWait('% {TAB}')
+          
+          # Take screenshot and upload to GoFile
           python -c "
 import pyautogui, requests
+import time
+time.sleep(2)  # Wait a moment for any window change
 ss = pyautogui.screenshot()
 ss.save('screen.png')
 with open('screen.png', 'rb') as f:
-    res = requests.post(
-        'https://api.gofile.io/uploadFile',
-        files={'file': f}
-    )
-    link = res.json()['data']['downloadPage']
-    print(f'Gofile Link: {link}')
+    r = requests.post('https://api.gofile.io/uploadFile', files={'file': f})
+    link = r.json().get('data', {}).get('downloadPage', 'No link')
+    print(f'GoFile Link: {link}')
 "
