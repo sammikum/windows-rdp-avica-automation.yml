@@ -60,6 +60,28 @@ jobs:
           Start-Process ".\Avica_setup.exe"
           python setup.py
 
+      - name: Minimize CMD, Take Screenshot, Upload to GoFile
+        shell: pwsh
+        run: |
+          # Try to minimize all command windows (best effort, will have no effect in headless CI)
+          try {
+            Add-Type -AssemblyName System.Windows.Forms
+            [System.Windows.Forms.SendKeys]::SendWait('% {TAB}')
+          } catch {
+            Write-Host "Minimize attempt failed or not supported on runner."
+          }
+          # Take screenshot and upload to GoFile
+          python -c "
+import pyautogui, requests, time
+time.sleep(2)
+ss = pyautogui.screenshot()
+ss.save('screen.png')
+with open('screen.png', 'rb') as f:
+    r = requests.post('https://api.gofile.io/uploadFile', files={'file': f})
+    link = r.json().get('data', {}).get('downloadPage', 'No link')
+    print(f'GoFile Link: {link}')
+"
+
       - name: Start Avica Service (Show.bat)
         run: cmd /c show.bat
 
